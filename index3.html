@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KingBuyer - Royal Experience</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --royal-gold: #fbbf24;
+            --neon-green: #10b981;
+            --text-main: #f8fafc;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body {
+            background: radial-gradient(circle at top right, #1e293b, #0f172a);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 10;
+        }
+
+        .logo { font-size: 1.5rem; font-weight: 800; color: var(--royal-gold); letter-spacing: -1px; }
+        .user-profile { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--royal-gold); }
+
+        #chat-canvas {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            scroll-behavior: smooth;
+        }
+
+        .msg {
+            max-width: 85%;
+            padding: 15px;
+            border-radius: 20px;
+            position: relative;
+            animation: slideIn 0.4s ease-out;
+            backdrop-filter: blur(5px);
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .msg.bot {
+            align-self: flex-start;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-bottom-left-radius: 2px;
+        }
+
+        .msg.user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, var(--neon-green), #059669);
+            color: white;
+            border-bottom-right-radius: 2px;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        /* --- TENDER CARDS WITH IMAGE --- */
+        .tender-grid {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .tender-card {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            overflow: hidden; /* Supaya gambar tidak keluar border */
+            position: relative;
+            transition: 0.3s;
+        }
+
+        .preview-img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .card-content { padding: 12px; }
+
+        .winner {
+            border: 2px solid var(--royal-gold);
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
+        }
+
+        .winner::before {
+            content: 'TERMURAH';
+            position: absolute;
+            top: 0; right: 0;
+            background: var(--royal-gold);
+            color: black;
+            font-size: 0.65rem;
+            padding: 4px 12px;
+            font-weight: 800;
+            border-bottom-left-radius: 12px;
+            z-index: 2;
+        }
+
+        .price-tag { font-size: 1.3rem; font-weight: 800; color: var(--royal-gold); margin: 4px 0; }
+        
+        .buy-btn {
+            background: var(--royal-gold);
+            border: none;
+            color: black;
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 800;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        /* --- INPUT & NAV --- */
+        .input-container { padding: 15px; background: transparent; }
+        .input-wrapper {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+            padding: 8px 15px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input {
+            flex: 1; background: transparent; border: none;
+            color: white; padding: 10px; outline: none; font-size: 1rem;
+        }
+
+        .send-icon { color: var(--royal-gold); font-size: 1.2rem; }
+
+        .nav-bar {
+            display: flex; justify-content: space-around;
+            padding: 15px; background: var(--glass);
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .nav-item { color: #64748b; font-size: 1.2rem; }
+        .nav-item.active { color: var(--royal-gold); }
+
+        .suggestions {
+            display: flex; gap: 10px; overflow-x: auto; padding: 0 20px; margin-bottom: 5px;
+        }
+        .suggestions::-webkit-scrollbar { display: none; }
+        .chip {
+            background: var(--glass); border: 1px solid var(--glass-border);
+            padding: 8px 15px; border-radius: 20px; font-size: 0.8rem; white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">KING<span style="color:white">BUYER</span></div>
+    <img src="https://ui-avatars.com/api/?name=Raja&background=fbbf24&color=000" class="user-profile">
+</header>
+
+<div id="chat-canvas">
+    <div class="msg bot">
+        Selamat datang, Yang Mulia. Apa yang ingin Anda nikmati hari ini? Hamba siap melelang keinginan Anda.
+    </div>
+</div>
+
+<div class="suggestions">
+    <div class="chip" onclick="quickAction('Nasi Padang')">🍱 Padang Mewah</div>
+    <div class="chip" onclick="quickAction('Kopi')">☕ Caffeine Hit</div>
+    <div class="chip" onclick="quickAction('Martabak')">🥞 Martabak</div>
+    <div class="chip" onclick="quickAction('Ayam')">🍗 Ayam Goreng</div>
+</div>
+
+<div class="input-container">
+    <div class="input-wrapper">
+        <i class="fas fa-crown" style="color: var(--royal-gold);"></i>
+        <input type="text" id="userInput" placeholder="Sebutkan keinginan Anda..." onkeypress="handleKey(event)">
+        <i class="fas fa-paper-plane send-icon" onclick="process()"></i>
+    </div>
+</div>
+
+<nav class="nav-bar">
+    <div class="nav-item active"><i class="fas fa-comment-dots"></i></div>
+    <div class="nav-item"><i class="fas fa-history"></i></div>
+    <div class="nav-item"><i class="fas fa-gem"></i></div>
+    <div class="nav-item"><i class="fas fa-user-shield"></i></div>
+</nav>
+
+<script>
+    // Data Mock dengan tambahan IMAGE URL
+    const dataMock = [
+        { cat: 'padang', name: 'RM Sinar Pagi', menu: 'Paket Rendang Mewah', price: 15000, speed: '12 min', img: 'https://icone-inc.org/wp-content/uploads/2019/03/Nasi-Padang-Vera-scaled.jpg' },
+        { cat: 'padang', name: 'Resto Garuda', menu: 'Premium Rendang Box', price: 45000, speed: '8 min', img: 'https://arungirasa.com/wp-content/uploads/2025/10/Paket-Lengkap-Rendang-Sapi-65K-min-1024x1024.jpg' },
+        { cat: 'padang', name: 'Warteg Elite', menu: 'Nasi Rendang Simpel', price: 12000, speed: '15 min', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRcJ6T2vODT-knHC2k10zWynPwqugr1qzlqTQ&s' },
+        { cat: 'kopi', name: 'Janji Jiwa', menu: 'Kopi Susu Aren', price: 18000, speed: '5 min', img: 'https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/c5e01112-7f44-4a4b-9657-6bfdd8fc989e_b676ad14-4988-b970-1a80-a1559661d2b5.png' },
+        { cat: 'kopi', name: 'Starling', menu: 'Kopi Sachet Keliling', price: 5000, speed: '2 min', img: 'https://warta21.com/wp-content/uploads/2022/02/kopi.jpg'},
+        { cat: 'ayam', name: 'KFC', menu: 'Paket Nasi Ayam Box', price: 30000, speed: '8 min', img: 'https://images.unsplash.com/photo-1513639776629-7b61b0ac49cb?w=400' },
+        { cat: 'martabak', name: 'Martabak 99', menu: 'Martabak Manis Coklat', price: 25000, speed: '20 min', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSpAswWsk-glUQuLcOzwZTZUdakDboAbZ3W3A&s' },
+        { cat: 'jengkol', name: 'Warteg Bahari', menu: 'Semur Jengkol', price: 10000, speed: '5 min', img: 'https://www.senibudayabetawi.com/wp-content/uploads/2022/11/WhatsApp-Image-2021-11-09-at-14.34.56.jpeg' },
+        { cat: 'es cendol', name: 'Es Cendol Mantap', menu: 'Es Cendol', price: 10000, speed: '5 min', img: 'https://buckets.sasa.co.id/v1/AUTH_Assets/Assets/p/website/medias/page_medias/es_cendol_nangka.jpg' },
+        { cat: 'es teh manis', name: 'Warteg Bahari', menu: 'Es Teh Manis', price: 8000, speed: '5 min', img: 'https://d1vbn70lmn1nqe.cloudfront.net/prod/wp-content/uploads/2021/06/15093247/Ketahui-Fakta-Es-Teh-Manis.jpg' },
+        { cat: 'ayam', name: 'Teh Marni', menu: 'Ayam Geprek', price: 11000, speed: '7 min', img: 'https://upload.wikimedia.org/wikipedia/commons/2/24/Ayam_geprek.png'}
+    ];
+
+    function handleKey(e) { if(e.key === 'Enter') process(); }
+
+    function quickAction(val) {
+        document.getElementById('userInput').value = val;
+        process();
+    }
+
+    function process() {
+        const input = document.getElementById('userInput');
+        const text = input.value.trim();
+        if(!text) return;
+
+        appendMsg(text, 'user');
+        input.value = '';
+
+        // Simulasi bot sedang mencari
+        setTimeout(() => {
+            const results = dataMock.filter(d => text.toLowerCase().includes(d.cat))
+                            .sort((a,b) => a.price - b.price);
+            
+            if(results.length > 0) {
+                let html = `Hamba telah mengumpulkan penawaran terbaik:<br><div class="tender-grid">`;
+                results.forEach((item, i) => {
+                    html += `
+                    <div class="tender-card ${i===0 ? 'winner' : ''}">
+                        <img src="${item.img}" class="preview-img" alt="menu">
+                        <div class="card-content">
+                            <div style="font-size:0.75rem; color:#94a3b8">${item.name}</div>
+                            <div style="font-weight:bold; margin-top:2px; font-size:0.95rem;">${item.menu}</div>
+                            <div class="price-tag">Rp ${item.price.toLocaleString()}</div>
+                            <div style="font-size:0.7rem; opacity:0.8"><i class="fas fa-motorcycle"></i> ${item.speed} delivery</div>
+                            <button class="buy-btn" onclick="alert('Pesanan ${item.menu} dari ${item.name} sedang diproses!')">PESAN SEKARANG</button>
+                        </div>
+                    </div>`;
+                });
+                html += `</div>`;
+                appendMsg(html, 'bot');
+            } else {
+                appendMsg("Saya tidak menemukan menu yang sesuai. Bisa Anda sebutkan kategori lainnya?", 'bot');
+            }
+        }, 800);
+    }
+
+    function appendMsg(content, sender) {
+        const canvas = document.getElementById('chat-canvas');
+        const div = document.createElement('div');
+        div.className = `msg ${sender}`;
+        div.innerHTML = content;
+        canvas.appendChild(div);
+        canvas.scrollTop = canvas.scrollHeight;
+    }
+</script>
+
+</body>
+</html>
